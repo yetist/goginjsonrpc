@@ -10,7 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func jsonrpcError(c *gin.Context, code int, message string, data string, id string) {
+func jsonrpcError(c *gin.Context, code int, message string, data string, id any) {
 	c.JSON(http.StatusOK, map[string]interface{}{
 		"result":  nil,
 		"jsonrpc": "2.0",
@@ -55,7 +55,7 @@ func ProcessJsonRPC(c *gin.Context, api interface{}) {
 	}
 
 	fmt.Println("data:", data)
-	id, ok := data["id"].(string)
+	id, ok := data["id"]
 	fmt.Println("Id:", data["id"], id, ok)
 	if !ok {
 		jsonrpcError(c, -32600, "Invalid Request", "No or invalid 'id' in request", "null")
