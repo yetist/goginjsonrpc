@@ -26,7 +26,7 @@ func jsonrpcError(c *gin.Context, code int, message string, data string, id stri
 func ProcessJsonRPC(c *gin.Context, api interface{}) {
 	// check if we have any POST date
 
-	if "POST" != c.Request.Method {
+	if c.Request.Method != "POST" {
 		jsonrpcError(c, -32700, "Parse error", "POST method excepted", "null")
 		return
 	}
@@ -63,7 +63,7 @@ func ProcessJsonRPC(c *gin.Context, api interface{}) {
 	}
 
 	// having JSON now... validating if we all needed fields and version
-	if "2.0" != data["jsonrpc"] {
+	if data["jsonrpc"] != "2.0" {
 		jsonrpcError(c, -32600, "Invalid Request", "Version of jsonrpc is not 2.0", id)
 		return
 	}
