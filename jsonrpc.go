@@ -76,18 +76,7 @@ func ProcessJsonRPC(c *gin.Context, api interface{}) {
 
 	fmt.Printf("Method: '%s'\n", method)
 
-	// decoding params
-
-	params, ok := data["params"].([]interface{})
-	if !ok {
-		jsonrpcError(c, -32602, "Invalid params", "No or invalid 'params' in request", id)
-		return
-	}
-
-	fmt.Println("params:", params)
-
 	// checking if method is avaiable in "api"
-
 	fmt.Println(reflect.ValueOf(api), reflect.ValueOf(api).Type().Method(0))
 
 	call := reflect.ValueOf(api).MethodByName(method)
@@ -97,13 +86,33 @@ func ProcessJsonRPC(c *gin.Context, api interface{}) {
 		return
 	}
 
+	// decoding params
+	var (
+		result []reflect.Value
+		args   []reflect.Value
+		params []any
+	)
+
+	if _, ok = data["params"]; !ok {
+		result = call.Call(nil)
+		goto end
+	}
+
+	params, ok = data["params"].([]interface{})
+	if !ok {
+		jsonrpcError(c, -32602, "Invalid params", "No or invalid 'params' in request", id)
+		return
+	}
+
+	fmt.Println("params:", params)
+
 	// validating and converting params
 	if call.Type().NumIn() != len(params) {
 		jsonrpcError(c, -32602, "Invalid params", "Invalid number of params", id)
 		return
 	}
 
-	args := make([]reflect.Value, len(params))
+	args = make([]reflect.Value, len(params))
 	for i, arg := range params {
 		switch call.Type().In(i).Kind() {
 		case reflect.Float32:
@@ -320,9 +329,9 @@ func ProcessJsonRPC(c *gin.Context, api interface{}) {
 			}
 		}
 	}
+	result = call.Call(args)
 
-	result := call.Call(args)
-
+end:
 	if len(result) > 0 {
 		c.JSON(http.StatusOK, map[string]interface{}{
 			"result":  result[0].Interface(),
