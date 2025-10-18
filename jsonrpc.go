@@ -11,10 +11,10 @@ import (
 )
 
 func jsonrpcError(c *gin.Context, code int, message string, data string, id any) {
-	c.JSON(http.StatusOK, map[string]interface{}{
+	c.JSON(http.StatusOK, map[string]any{
 		"result":  nil,
 		"jsonrpc": "2.0",
-		"error": map[string]interface{}{
+		"error": map[string]any{
 			"code":    code,
 			"message": message,
 			"data":    data,
@@ -23,7 +23,7 @@ func jsonrpcError(c *gin.Context, code int, message string, data string, id any)
 	})
 }
 
-func ProcessJsonRPC(c *gin.Context, api interface{}) {
+func ProcessJsonRPC(c *gin.Context, api any) {
 	// check if we have any POST date
 
 	if c.Request.Method != "POST" {
@@ -46,7 +46,7 @@ func ProcessJsonRPC(c *gin.Context, api interface{}) {
 
 	// try to decode JSON
 
-	data := make(map[string]interface{})
+	data := make(map[string]any)
 	err = json.Unmarshal(body, &data)
 
 	if nil != err {
@@ -98,7 +98,7 @@ func ProcessJsonRPC(c *gin.Context, api interface{}) {
 		goto end
 	}
 
-	params, ok = data["params"].([]interface{})
+	params, ok = data["params"].([]any)
 	if !ok {
 		jsonrpcError(c, -32602, "Invalid params", "No or invalid 'params' in request", id)
 		return
@@ -216,7 +216,7 @@ func ProcessJsonRPC(c *gin.Context, api interface{}) {
 			args[i] = reflect.ValueOf(val)
 
 		case reflect.Map:
-			val, ok := arg.(map[interface{}]interface{})
+			val, ok := arg.(map[any]any)
 			if !ok {
 				jsonrpcError(c, -32602, "Invalid params", fmt.Sprintf("Param [%d] can't be converted to %v", i, call.Type().In(i).String()), id)
 				return
@@ -224,7 +224,7 @@ func ProcessJsonRPC(c *gin.Context, api interface{}) {
 			args[i] = reflect.ValueOf(val)
 
 		case reflect.Slice:
-			val, ok := arg.([]interface{})
+			val, ok := arg.([]any)
 			if !ok {
 				jsonrpcError(c, -32602, "Invalid params", fmt.Sprintf("Param [%d] can't be converted to %v", i, call.Type().In(i).String()), id)
 				return
@@ -333,13 +333,13 @@ func ProcessJsonRPC(c *gin.Context, api interface{}) {
 
 end:
 	if len(result) > 0 {
-		c.JSON(http.StatusOK, map[string]interface{}{
+		c.JSON(http.StatusOK, map[string]any{
 			"result":  result[0].Interface(),
 			"jsonrpc": "2.0",
 			"id":      id,
 		})
 	} else {
-		c.JSON(http.StatusOK, map[string]interface{}{
+		c.JSON(http.StatusOK, map[string]any{
 			"result":  nil,
 			"jsonrpc": "2.0",
 			"id":      id,
