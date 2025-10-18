@@ -1,10 +1,9 @@
 package goginjsonrpc
 
 import (
-	"fmt"
-
 	"encoding/json"
-	"io/ioutil"
+	"fmt"
+	"io"
 	"net/http"
 	"reflect"
 
@@ -25,7 +24,6 @@ func jsonrpcError(c *gin.Context, code int, message string, data string, id stri
 }
 
 func ProcessJsonRPC(c *gin.Context, api interface{}) {
-
 	// check if we have any POST date
 
 	if "POST" != c.Request.Method {
@@ -40,7 +38,7 @@ func ProcessJsonRPC(c *gin.Context, api interface{}) {
 
 	// reading POST data
 
-	body, err := ioutil.ReadAll(c.Request.Body)
+	body, err := io.ReadAll(c.Request.Body)
 	if nil != err {
 		jsonrpcError(c, -32700, "Parse error", "Error while reading request body", "null")
 		return
@@ -107,7 +105,6 @@ func ProcessJsonRPC(c *gin.Context, api interface{}) {
 
 	args := make([]reflect.Value, len(params))
 	for i, arg := range params {
-
 		switch call.Type().In(i).Kind() {
 		case reflect.Float32:
 			val, ok := arg.(float32)
@@ -322,7 +319,6 @@ func ProcessJsonRPC(c *gin.Context, api interface{}) {
 				return
 			}
 		}
-
 	}
 
 	result := call.Call(args)
@@ -340,5 +336,4 @@ func ProcessJsonRPC(c *gin.Context, api interface{}) {
 			"id":      id,
 		})
 	}
-
 }
